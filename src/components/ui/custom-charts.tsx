@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { Line, Bar, Area } from "recharts";
+import { Line, Bar, Area, ResponsiveContainer } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -43,22 +43,26 @@ export function AreaChart({
   );
 
   return (
-    <ChartContainer
-      className={className}
-      config={config}
-    >
-      <ChartTooltip content={<ChartTooltipContent />} />
-      {categories.map((category, i) => (
-        <Area
-          key={category}
-          dataKey={category}
-          type="monotone"
-          stroke={config[category].color || colors[i % colors.length]}
-          fillOpacity={0.2}
-          fill={config[category].color || colors[i % colors.length]}
-        />
-      ))}
-    </ChartContainer>
+    <div className={className}>
+      <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer config={config}>
+          <>
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {categories.map((category, i) => (
+              <Area
+                key={category}
+                dataKey={category}
+                type="monotone"
+                stroke={config[category].color || colors[i % colors.length]}
+                fillOpacity={0.2}
+                fill={config[category].color || colors[i % colors.length]}
+                data={data}
+              />
+            ))}
+          </>
+        </ChartContainer>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -86,18 +90,22 @@ export function BarChart({
   );
 
   return (
-    <ChartContainer
-      className={className}
-      config={config}
-    >
-      <ChartTooltip content={<ChartTooltipContent />} />
-      {categories.map((category, i) => (
-        <Bar
-          key={category}
-          dataKey={category}
-          fill={config[category].color || colors[i % colors.length]}
-        />
-      ))}
-    </ChartContainer>
+    <div className={className}>
+      <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer config={config}>
+          <>
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {categories.map((category, i) => (
+              <Bar
+                key={category}
+                dataKey={category}
+                fill={config[category].color || colors[i % colors.length]}
+                data={data}
+              />
+            ))}
+          </>
+        </ChartContainer>
+      </ResponsiveContainer>
+    </div>
   );
 }
