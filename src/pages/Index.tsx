@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { AreaChart, BarChart } from '@/components/ui/chart';
+import { AreaChart, BarChart } from '@/components/ui/custom-charts';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, AlertCircle, BarChart3, Settings, RefreshCw } from "lucide-react";
 
 // Mock trading data
