@@ -1,73 +1,95 @@
-# Welcome to your Lovable project
 
-## Project info
+# AlgoTrader Bot - High-Risk Momentum Trading
 
-**URL**: https://lovable.dev/projects/620014b2-e918-45cc-8485-54a9fb75e271
+A Python-based algorithmic stock trading bot designed to maximize short-term gains with high-risk momentum-based and breakout trading strategies. The bot utilizes sentiment analysis from social media and technical indicators to make trading decisions.
 
-## How can I edit this code?
+## Key Features
 
-There are several ways of editing your application.
+- **Trading Strategies**:
+  - **Sentiment-Based Trading**: Analyzes X (Twitter) posts to detect sentiment on high-volatility stocks.
+  - **Breakout Trading**: Identifies price breakouts with volume confirmation and RSI confirmation.
+  - **Mean Reversion Strategy**: (Post-challenge) For more stable returns after the initial growth phase.
 
-**Use Lovable**
+- **Streaming-Friendly UI**:
+  - Live P&L display
+  - Real-time sentiment and technical analysis
+  - Interactive charts with trade entry/exit points
+  - Community polls for strategy selection
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/620014b2-e918-45cc-8485-54a9fb75e271) and start prompting.
+- **Risk Management**:
+  - Configurable stop-losses
+  - Trailing stops for breakout trades
+  - Maximum daily loss limits
+  - Comprehensive trade logging
 
-Changes made via Lovable will be committed automatically to this repo.
+## Setup Instructions
 
-**Use your preferred IDE**
+### 1. Install Dependencies
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+pip install -r requirements.txt
 ```
 
-**Edit a file directly in GitHub**
+### 2. Configure Alpaca API
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env` file in the project root directory with your Alpaca API credentials:
 
-**Use GitHub Codespaces**
+```
+ALPACA_API_KEY=YOUR_API_KEY
+ALPACA_API_SECRET=YOUR_API_SECRET
+ALPACA_BASE_URL=https://paper-api.alpaca.markets
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+For Twitter API access (optional):
 
-## What technologies are used for this project?
+```
+TWITTER_API_KEY=YOUR_TWITTER_API_KEY
+TWITTER_API_SECRET=YOUR_TWITTER_API_SECRET
+TWITTER_ACCESS_TOKEN=YOUR_TWITTER_ACCESS_TOKEN
+TWITTER_ACCESS_SECRET=YOUR_TWITTER_ACCESS_SECRET
+TWITTER_BEARER_TOKEN=YOUR_TWITTER_BEARER_TOKEN
+```
 
-This project is built with:
+### 3. Run the Bot
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+To run the trading bot in the background:
 
-## How can I deploy this project?
+```bash
+python main.py
+```
 
-Simply open [Lovable](https://lovable.dev/projects/620014b2-e918-45cc-8485-54a9fb75e271) and click on Share -> Publish.
+To launch the Streamlit dashboard:
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+streamlit run streamlit_app.py
+```
 
-Yes, you can!
+## Project Structure
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- `main.py`: Core bot logic with Alpaca trading integration
+- `sentiment.py`: Social media sentiment analysis
+- `breakout.py`: Technical analysis for breakout detection
+- `mean_reversion.py`: Mean reversion strategy implementation
+- `streamlit_app.py`: Interactive web dashboard
+- `trades.csv`: Log of all executed trades
+- `requirements.txt`: Required Python packages
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Trading Parameters
+
+- Starting capital: $100
+- Risk per trade: $20-50
+- Stop-loss: 5%
+- Trailing stop: 10% (for breakout trades)
+- Maximum daily loss: 15%
+- Target returns: 50-200% in 14-21 days
+
+## Usage Notes
+
+- The bot runs in paper trading mode by default
+- For live trading, change the `ALPACA_BASE_URL` to `https://api.alpaca.markets`
+- Adjust risk parameters in `main.py` based on your risk tolerance
+- Monitor the Streamlit dashboard for real-time performance metrics
+
+## Disclaimer
+
+This trading bot involves high-risk strategies designed for educational and entertainment purposes. It is not financial advice. Trading algorithms can lose money, especially with the aggressive strategies implemented here. Use at your own risk and only with capital you can afford to lose.

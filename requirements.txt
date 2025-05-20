@@ -1,0 +1,10 @@
+
+alpaca-trade-api
+pandas
+pandas-ta
+vaderSentiment
+streamlit
+plotly
+python-dotenv
+tweepy
+numpy

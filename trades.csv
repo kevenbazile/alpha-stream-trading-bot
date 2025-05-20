@@ -1,0 +1,8 @@
+
+timestamp,symbol,action,price,shares,pnl,strategy,cash_remaining
+2025-05-20 09:35:22,TSLA,BUY,180.25,0.1665,0,sentiment,70.0
+2025-05-20 10:12:45,NVDA,BUY,125.50,0.2390,0,breakout,40.0
+2025-05-20 11:45:30,TSLA,SELL (take_profit),198.75,0.1665,3.08,sentiment,73.08
+2025-05-20 13:22:15,AMD,BUY,145.25,0.3443,0,breakout,23.08
+2025-05-20 14:50:55,NVDA,SELL (trailing_stop),140.25,0.2390,3.53,breakout,56.61
+2025-05-20 15:15:10,AMD,SELL (stop_loss),138.00,0.3443,-2.50,breakout,104.11
