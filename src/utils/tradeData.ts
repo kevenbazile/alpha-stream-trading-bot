@@ -11,15 +11,19 @@ export const useTradingData = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [portfolioSummary, setPortfolioSummary] = useState<PortfolioSummary>({
-    capital: 0,
+    capital: 100,
     totalPnL: 0,
     totalTrades: 0,
     openPositions: 0,
     closedPositions: 0,
     winRate: 0
   });
-  const [performanceData, setPerformanceData] = useState<PerformanceData[]>([]);
-  const [dailyReturns, setDailyReturns] = useState<DailyReturn[]>([]);
+  const [performanceData, setPerformanceData] = useState<PerformanceData[]>([
+    { day: 1, capital: 100 }
+  ]);
+  const [dailyReturns, setDailyReturns] = useState<DailyReturn[]>([
+    { day: 1, return: 0 }
+  ]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,16 +43,21 @@ export const useTradingData = () => {
           // Fallback to local CSV data
           try {
             const parsedTrades = await fetchCsvData();
-            setTrades(parsedTrades);
             
-            // Calculate portfolio summary
-            const summary = calculatePortfolioSummary(parsedTrades);
-            setPortfolioSummary(summary);
-            
-            // Generate performance data
-            const { performance, returns } = generatePerformanceData(parsedTrades);
-            setPerformanceData(performance);
-            setDailyReturns(returns);
+            if (parsedTrades && parsedTrades.length > 0) {
+              setTrades(parsedTrades);
+              
+              // Calculate portfolio summary
+              const summary = calculatePortfolioSummary(parsedTrades);
+              setPortfolioSummary(summary);
+              
+              // Generate performance data
+              const { performance, returns } = generatePerformanceData(parsedTrades);
+              setPerformanceData(performance);
+              setDailyReturns(returns);
+            } else {
+              throw new Error("CSV data was empty or invalid");
+            }
           } catch (csvError) {
             console.error("Error with CSV data:", csvError);
             throw csvError; // Rethrow to trigger the mock data fallback
@@ -59,7 +68,6 @@ export const useTradingData = () => {
       } catch (err) {
         console.error("Error fetching trade data:", err);
         setError("Failed to load trade data. Please try again later.");
-        setIsLoading(false);
         
         // Generate mock data as absolute fallback
         const mockTrades = generateMockTradeData();
@@ -71,6 +79,8 @@ export const useTradingData = () => {
         const { performance, returns } = generatePerformanceData(mockTrades);
         setPerformanceData(performance);
         setDailyReturns(returns);
+        
+        setIsLoading(false);
       }
     };
     
@@ -86,4 +96,3 @@ export const useTradingData = () => {
     dailyReturns
   };
 };
-

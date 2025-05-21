@@ -130,6 +130,16 @@ const TradingDashboard = () => {
     );
   }
 
+  // Make sure portfolioSummary always has default values to prevent undefined errors
+  const safeSummary = {
+    capital: portfolioSummary?.capital ?? 100,
+    totalPnL: portfolioSummary?.totalPnL ?? 0,
+    totalTrades: portfolioSummary?.totalTrades ?? 0,
+    openPositions: portfolioSummary?.openPositions ?? 0,
+    closedPositions: portfolioSummary?.closedPositions ?? 0,
+    winRate: portfolioSummary?.winRate ?? 0
+  };
+
   return (
     <div className="container mx-auto p-4">
       <Toaster />
@@ -174,29 +184,29 @@ const TradingDashboard = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Capital:</span>
-                      <span className="font-bold text-lg">${portfolioSummary.capital.toFixed(2)}</span>
+                      <span className="font-bold text-lg">${safeSummary.capital.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total P&L:</span>
-                      <span className={`font-bold text-lg ${portfolioSummary.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${portfolioSummary.totalPnL.toFixed(2)} ({(portfolioSummary.totalPnL / 100 * 100).toFixed(2)}%)
+                      <span className={`font-bold text-lg ${safeSummary.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${safeSummary.totalPnL.toFixed(2)} ({((safeSummary.totalPnL / safeSummary.capital) * 100).toFixed(2)}%)
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Win Rate:</span>
-                      <span className="font-bold text-lg">{portfolioSummary.winRate}%</span>
+                      <span className="font-bold text-lg">{safeSummary.winRate}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Trades:</span>
-                      <span className="font-bold">{portfolioSummary.totalTrades}</span>
+                      <span className="font-bold">{safeSummary.totalTrades}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Open Positions:</span>
-                      <span className="font-bold">{portfolioSummary.openPositions}</span>
+                      <span className="font-bold">{safeSummary.openPositions}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Closed Positions:</span>
-                      <span className="font-bold">{portfolioSummary.closedPositions}</span>
+                      <span className="font-bold">{safeSummary.closedPositions}</span>
                     </div>
                   </div>
                 )}
