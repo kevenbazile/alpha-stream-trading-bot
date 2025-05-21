@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -78,40 +77,8 @@ const TradingDashboard = () => {
   };
 
   // Use opportunities from API if available, otherwise use fallback data
-  const marketOpportunities = opportunities && opportunities.length > 0 ? 
-    opportunities : 
-    [
-      {
-        marketTicker: "TSLA",
-        marketTitle: "Tesla showing bullish pattern on 4h chart",
-        yesPrice: 180.25,
-        noPrice: 175.65,
-        volume: 32540,
-        openInterest: 4500,
-        action: "BUY",
-        confidence: 0.85
-      },
-      {
-        marketTicker: "NVDA",
-        marketTitle: "NVIDIA momentum growing after earnings",
-        yesPrice: 125.50,
-        noPrice: 120.75,
-        volume: 18750,
-        openInterest: 3200,
-        action: "BUY",
-        confidence: 0.72
-      },
-      {
-        marketTicker: "AMD",
-        marketTitle: "AMD showing support at key level",
-        yesPrice: 145.25,
-        noPrice: 140.50,
-        volume: 25300,
-        openInterest: 5100,
-        action: "BUY",
-        confidence: 0.78
-      }
-    ];
+  // No longer using hardcoded mock data here - we'll use what comes from the API
+  const marketOpportunities = opportunities || [];
 
   if (error) {
     return (
@@ -356,7 +323,7 @@ const TradingDashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Trading Opportunities</CardTitle>
-              <CardDescription>Markets with favorable conditions based on your strategy</CardDescription>
+              <CardDescription>Prediction markets with favorable conditions based on your strategy</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -364,6 +331,14 @@ const TradingDashboard = () => {
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
+                </div>
+              ) : marketOpportunities.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-10 w-10 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium">No opportunities found</h3>
+                  <p className="text-muted-foreground mt-2">
+                    No prediction markets matching your strategy criteria were found.
+                  </p>
                 </div>
               ) : (
                 <Table>
@@ -390,7 +365,7 @@ const TradingDashboard = () => {
                         <TableCell>{opp.volume.toLocaleString()}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                            opp.action === 'BUY' ? "bg-green-100 text-green-800" : 
+                            opp.action.includes('YES') ? "bg-green-100 text-green-800" : 
                             "bg-yellow-100 text-yellow-800"
                           }`}>
                             {opp.action}
@@ -423,7 +398,7 @@ const TradingDashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Trading History</CardTitle>
-              <CardDescription>Record of executed trades</CardDescription>
+              <CardDescription>Record of executed trades in prediction markets</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -432,12 +407,20 @@ const TradingDashboard = () => {
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
                 </div>
+              ) : trades.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-10 w-10 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium">No trade history</h3>
+                  <p className="text-muted-foreground mt-2">
+                    No trades have been executed yet.
+                  </p>
+                </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
-                      <TableHead>Symbol</TableHead>
+                      <TableHead>Market</TableHead>
                       <TableHead>Action</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Shares</TableHead>
@@ -448,17 +431,20 @@ const TradingDashboard = () => {
                     {trades.map((trade, index) => (
                       <TableRow key={index}>
                         <TableCell>{trade.timestamp}</TableCell>
-                        <TableCell className="font-medium">{trade.symbol}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="line-clamp-1">{trade.symbol}</div>
+                        </TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                            trade.action && typeof trade.action === 'string' && trade.action.startsWith('BUY') 
+                            trade.action && typeof trade.action === 'string' && 
+                            (trade.action.includes('BUY') || trade.action.includes('win')) 
                               ? "bg-green-100 text-green-800" 
                               : "bg-red-100 text-red-800"
                           }`}>
                             {trade.action}
                           </span>
                         </TableCell>
-                        <TableCell>${trade.price}</TableCell>
+                        <TableCell>${trade.price.toFixed(2)}</TableCell>
                         <TableCell>{trade.shares.toFixed(4)}</TableCell>
                         <TableCell>
                           {trade.pnl !== undefined ? (

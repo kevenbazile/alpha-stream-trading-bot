@@ -87,6 +87,9 @@ function transformKalshiData(data: KalshiResponse) {
   
   // Process each event and its markets
   data.events.forEach(event => {
+    // Skip events with no markets
+    if (!event.markets || event.markets.length === 0) return;
+    
     event.markets.forEach(market => {
       // Only add markets with at least YES and NO contracts
       if (market.contracts && market.contracts.length >= 2) {
@@ -95,20 +98,33 @@ function transformKalshiData(data: KalshiResponse) {
         const noContract = market.contracts.find(c => c.ticker.endsWith('NO'));
         
         if (yesContract && noContract) {
-          // Determine if this is a potential opportunity
+          // Get prices for YES and NO positions
           const yesPrice = yesContract.price;
           const noPrice = noContract.price;
           
-          // Simple opportunity detection: any market with YES price > 0.6 is a BUY
-          // This is a placeholder - your actual strategy may be more complex
-          const isOpportunity = yesPrice > 0.6;
-          const action = isOpportunity ? "BUY" : "WAIT";
-          const confidence = isOpportunity ? yesPrice : (1 - yesPrice);
+          // Calculate market liquidity (volume or open interest)
+          const volume = market.volume24h || 0;
+          const openInterest = market.open_interest || 0;
           
-          // Calculate potential profit (simplified)
-          const potentialProfit = isOpportunity ? 
-            ((1 - yesPrice) / yesPrice) * 100 : 
-            ((1 - noPrice) / noPrice) * 100;
+          // Calculate confidence based on price and liquidity
+          // Higher price differential and higher liquidity = higher confidence
+          const priceSpread = Math.abs(yesPrice - noPrice);
+          const liquidity = volume > 0 ? volume : openInterest > 0 ? openInterest : 1;
+          
+          // Simple liquidity-weighted confidence score (0.5-1.0)
+          // Higher YES price = BUY, Higher NO price = SELL
+          const isYesOpportunity = yesPrice > noPrice;
+          const confidenceBase = isYesOpportunity ? yesPrice : noPrice;
+          
+          // Scale liquidity logarithmically (prevents extremely high volume from skewing too much)
+          const liquidityFactor = Math.min(0.2, Math.log10(liquidity) / 50);
+          
+          // Final confidence is base confidence plus liquidity adjustment
+          const confidence = Math.min(0.99, confidenceBase + liquidityFactor);
+          
+          // Determine action based on price comparison
+          // YES price > 0.6 suggests buying YES, otherwise suggest NO
+          const action = isYesOpportunity ? "BUY YES" : "BUY NO";
           
           // Add to opportunities
           opportunities.push({
@@ -116,44 +132,56 @@ function transformKalshiData(data: KalshiResponse) {
             marketTitle: market.title,
             yesPrice: yesPrice, 
             noPrice: noPrice,
-            volume: market.volume24h || yesContract.volume || 0,
-            openInterest: market.open_interest || yesContract.open_interest || 0,
+            volume: volume,
+            openInterest: openInterest,
             action: action,
             confidence: confidence
           });
           
-          // For demo purposes, create a historical trade for the first market
-          // In a real app, you would track actual trades made by the user
-          if (opportunities.length === 1) {
+          // For demo purposes, create a historical trade for some markets
+          // In a real app, this would come from actual trade execution
+          if (Math.random() > 0.7) { // Only create trades for ~30% of opportunities
             const now = new Date();
             const yesterday = new Date(now);
             yesterday.setDate(now.getDate() - 1);
+            
+            // Position size based on confidence (higher confidence = larger position)
+            const positionSize = 0.5 * confidence;
+            
+            // Choose the price based on the action
+            const entryPrice = isYesOpportunity ? yesPrice : noPrice;
             
             // Mock a BUY trade from yesterday
             trades.push({
               timestamp: yesterday.toISOString().replace('T', ' ').substring(0, 19),
               symbol: market.ticker,
-              action: "BUY",
-              price: yesPrice,
-              shares: 0.5,
-              pnl: 0,
-              strategy: "sentiment",
-              cashRemaining: 100 - (yesPrice * 0.5 * 100)
+              action: action,
+              price: entryPrice,
+              shares: positionSize,
+              pnl: 0, // Initial PnL is 0
+              strategy: "prediction",
+              cashRemaining: 100 - (entryPrice * positionSize * 100)
             });
             
-            // Mock a SELL trade from today with some profit
-            const profitPrice = yesPrice * 1.05; // 5% profit
-            const profit = (profitPrice - yesPrice) * 0.5 * 100;
+            // Simulate price movement for settlement
+            const priceChange = (Math.random() * 0.2) - 0.1; // -10% to +10% change
+            const exitPrice = Math.min(0.99, Math.max(0.01, entryPrice + priceChange));
             
+            // Calculate profit/loss
+            const profit = isYesOpportunity ? 
+              ((exitPrice - entryPrice) * positionSize * 100) : 
+              ((entryPrice - exitPrice) * positionSize * 100);
+            
+            // Mock a SELL/SETTLEMENT trade from today
             trades.push({
               timestamp: now.toISOString().replace('T', ' ').substring(0, 19),
               symbol: market.ticker,
-              action: "SELL (take_profit)",
-              price: profitPrice,
-              shares: 0.5,
+              action: profit >= 0 ? "SETTLEMENT (win)" : "SETTLEMENT (loss)",
+              price: exitPrice,
+              shares: positionSize,
               pnl: profit,
-              strategy: "sentiment",
-              cashRemaining: (100 - (yesPrice * 0.5 * 100)) + (profitPrice * 0.5 * 100)
+              strategy: "prediction",
+              cashRemaining: (100 - (entryPrice * positionSize * 100)) + (exitPrice * positionSize * 100)
             });
           }
         }
