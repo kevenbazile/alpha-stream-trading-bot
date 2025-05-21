@@ -28,3 +28,4 @@ export interface DailyReturn {
   day: number;
   return: number;
 }
+

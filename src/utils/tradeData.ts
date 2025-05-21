@@ -5,7 +5,7 @@ import { fetchKalshiData, fetchCsvData } from '../services/apiService';
 import { generateMockTradeData } from './mockDataGenerator';
 import { calculatePortfolioSummary, generatePerformanceData } from './portfolioCalculations';
 
-export { Trade, PortfolioSummary, PerformanceData, DailyReturn };
+export type { Trade, PortfolioSummary, PerformanceData, DailyReturn };
 
 export const useTradingData = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -86,3 +86,4 @@ export const useTradingData = () => {
     dailyReturns
   };
 };
+
