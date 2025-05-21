@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,143 +9,22 @@ import { toast } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { AreaChart, BarChart } from '@/components/ui/custom-charts';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, AlertCircle, BarChart3, Settings, RefreshCw } from "lucide-react";
-
-// Mock trading data
-const mockPortfolioData = {
-  capital: 137.52,
-  totalPnL: 37.52,
-  totalTrades: 12,
-  openPositions: 2,
-  closedPositions: 10,
-  winRate: 75
-};
-
-const mockPerformanceData = [
-  { day: 1, capital: 98.50 },
-  { day: 2, capital: 105.20 },
-  { day: 3, capital: 102.80 },
-  { day: 4, capital: 110.15 },
-  { day: 5, capital: 115.60 },
-  { day: 6, capital: 120.25 },
-  { day: 7, capital: 117.90 },
-  { day: 8, capital: 125.40 },
-  { day: 9, capital: 130.75 },
-  { day: 10, capital: 128.30 },
-  { day: 11, capital: 135.80 },
-  { day: 12, capital: 140.20 },
-  { day: 13, capital: 137.52 },
-  { day: 14, capital: 145.10 }
-];
-
-const mockDailyReturns = [
-  { day: 1, return: -1.5 },
-  { day: 2, return: 6.8 },
-  { day: 3, return: -2.3 },
-  { day: 4, return: 7.1 },
-  { day: 5, return: 5.0 },
-  { day: 6, return: 4.0 },
-  { day: 7, return: -1.9 },
-  { day: 8, return: 6.4 },
-  { day: 9, return: 4.3 },
-  { day: 10, return: -1.9 },
-  { day: 11, return: 5.8 },
-  { day: 12, return: 3.2 },
-  { day: 13, return: -1.9 },
-  { day: 14, return: 5.5 }
-];
-
-const mockOpportunities = [
-  {
-    marketTicker: "MKT-3456",
-    marketTitle: "Will the Fed raise rates by September?",
-    yesPrice: 0.35,
-    noPrice: 0.65,
-    volume: 32540,
-    openInterest: 4500,
-    action: "BUY YES",
-    confidence: 0.85
-  },
-  {
-    marketTicker: "MKT-7890",
-    marketTitle: "Will unemployment drop below 4% in Q3?",
-    yesPrice: 0.62,
-    noPrice: 0.38,
-    volume: 18750,
-    openInterest: 3200,
-    action: "BUY NO",
-    confidence: 0.72
-  },
-  {
-    marketTicker: "MKT-2345",
-    marketTitle: "Will Company X announce layoffs this month?",
-    yesPrice: 0.28,
-    noPrice: 0.72,
-    volume: 25300,
-    openInterest: 5100,
-    action: "BUY YES",
-    confidence: 0.78
-  }
-];
-
-const mockTrades = [
-  {
-    id: "T-1001",
-    marketTicker: "MKT-3456",
-    contractTicker: "MKT-3456-YES",
-    action: "BUY",
-    price: 0.35,
-    quantity: 28,
-    cost: 9.8,
-    timestamp: "2023-05-18 10:32:15"
-  },
-  {
-    id: "T-1002",
-    marketTicker: "MKT-3456",
-    contractTicker: "MKT-3456-YES",
-    action: "SELL",
-    price: 0.48,
-    quantity: 28,
-    proceeds: 13.44,
-    profitLoss: 3.64,
-    timestamp: "2023-05-19 14:45:22"
-  },
-  {
-    id: "T-1003",
-    marketTicker: "MKT-7890",
-    contractTicker: "MKT-7890-NO",
-    action: "BUY",
-    price: 0.38,
-    quantity: 26,
-    cost: 9.88,
-    timestamp: "2023-05-20 09:15:03"
-  },
-  {
-    id: "T-1004", 
-    marketTicker: "MKT-2345",
-    contractTicker: "MKT-2345-YES",
-    action: "BUY",
-    price: 0.28,
-    quantity: 35,
-    cost: 9.8,
-    timestamp: "2023-05-20 11:05:45"
-  }
-];
+import { useTradingData } from '@/utils/tradeData';
 
 const TradingDashboard = () => {
-  const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [autoTrading, setAutoTrading] = useState(false);
   const [riskLevel, setRiskLevel] = useState([50]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    // Simulate API data loading
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
+  
+  const {
+    trades,
+    isLoading,
+    error,
+    portfolioSummary,
+    performanceData,
+    dailyReturns
+  } = useTradingData();
 
   const handleTabChange = (value: string) => {
     setSelectedTab(value);
@@ -168,15 +46,15 @@ const TradingDashboard = () => {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setLoading(true);
     
     // Simulate API refresh
     setTimeout(() => {
       setIsRefreshing(false);
-      setLoading(false);
       toast("Data refreshed", {
         description: `Last updated: ${new Date().toLocaleTimeString()}`,
       });
+      // We would reload the data here in a real application
+      window.location.reload();
     }, 1000);
   };
 
@@ -197,11 +75,66 @@ const TradingDashboard = () => {
     });
   };
 
+  // For opportunities tab - we'll keep the mock data for now
+  const mockOpportunities = [
+    {
+      marketTicker: "TSLA",
+      marketTitle: "Tesla showing bullish pattern on 4h chart",
+      yesPrice: 180.25,
+      noPrice: 175.65,
+      volume: 32540,
+      openInterest: 4500,
+      action: "BUY",
+      confidence: 0.85
+    },
+    {
+      marketTicker: "NVDA",
+      marketTitle: "NVIDIA momentum growing after earnings",
+      yesPrice: 125.50,
+      noPrice: 120.75,
+      volume: 18750,
+      openInterest: 3200,
+      action: "BUY",
+      confidence: 0.72
+    },
+    {
+      marketTicker: "AMD",
+      marketTitle: "AMD showing support at key level",
+      yesPrice: 145.25,
+      noPrice: 140.50,
+      volume: 25300,
+      openInterest: 5100,
+      action: "BUY",
+      confidence: 0.78
+    }
+  ];
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-500">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Retry
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <Toaster />
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Kalshi Trading Bot</h1>
+        <h1 className="text-3xl font-bold">Algorithmic Trading Bot</h1>
         <div className="flex items-center space-x-2">
           <button 
             onClick={handleRefresh}
@@ -230,7 +163,7 @@ const TradingDashboard = () => {
                 <CardDescription>Current trading statistics</CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {isLoading ? (
                   <div className="space-y-3">
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
@@ -241,29 +174,29 @@ const TradingDashboard = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Capital:</span>
-                      <span className="font-bold text-lg">${mockPortfolioData.capital.toFixed(2)}</span>
+                      <span className="font-bold text-lg">${portfolioSummary.capital.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total P&L:</span>
-                      <span className={`font-bold text-lg ${mockPortfolioData.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${mockPortfolioData.totalPnL.toFixed(2)} ({(mockPortfolioData.totalPnL / 100 * 100).toFixed(2)}%)
+                      <span className={`font-bold text-lg ${portfolioSummary.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${portfolioSummary.totalPnL.toFixed(2)} ({(portfolioSummary.totalPnL / 100 * 100).toFixed(2)}%)
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Win Rate:</span>
-                      <span className="font-bold text-lg">{mockPortfolioData.winRate}%</span>
+                      <span className="font-bold text-lg">{portfolioSummary.winRate}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Trades:</span>
-                      <span className="font-bold">{mockPortfolioData.totalTrades}</span>
+                      <span className="font-bold">{portfolioSummary.totalTrades}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Open Positions:</span>
-                      <span className="font-bold">{mockPortfolioData.openPositions}</span>
+                      <span className="font-bold">{portfolioSummary.openPositions}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Closed Positions:</span>
-                      <span className="font-bold">{mockPortfolioData.closedPositions}</span>
+                      <span className="font-bold">{portfolioSummary.closedPositions}</span>
                     </div>
                   </div>
                 )}
@@ -276,13 +209,13 @@ const TradingDashboard = () => {
                 <CardDescription>Account value over time</CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
-                {loading ? (
+                {isLoading ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <Skeleton className="h-[250px] w-full" />
                   </div>
                 ) : (
                   <AreaChart 
-                    data={mockPerformanceData}
+                    data={performanceData}
                     index="day"
                     categories={["capital"]}
                     colors={["blue"]}
@@ -304,13 +237,13 @@ const TradingDashboard = () => {
                 <CardDescription>Profit/loss per trading day</CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
-                {loading ? (
+                {isLoading ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <Skeleton className="h-[250px] w-full" />
                   </div>
                 ) : (
                   <BarChart 
-                    data={mockDailyReturns}
+                    data={dailyReturns}
                     index="day"
                     categories={["return"]}
                     colors={["blue"]}
@@ -331,24 +264,26 @@ const TradingDashboard = () => {
                 <CardTitle className="text-sm font-medium">Latest Action</CardTitle>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {isLoading ? (
                   <Skeleton className="h-12 w-full" />
-                ) : (
+                ) : trades.length > 0 ? (
                   <div className="flex flex-col">
                     <div className="flex items-center space-x-2">
-                      {mockTrades[3].action === "BUY" ? (
+                      {trades[trades.length - 1].action.startsWith('BUY') ? (
                         <ArrowUpCircle className="text-green-500 h-5 w-5" />
                       ) : (
                         <ArrowDownCircle className="text-red-500 h-5 w-5" />
                       )}
                       <span className="font-bold">
-                        {mockTrades[3].action} {mockTrades[3].contractTicker}
+                        {trades[trades.length - 1].action} {trades[trades.length - 1].symbol}
                       </span>
                     </div>
                     <span className="text-xs text-muted-foreground mt-1">
-                      {mockTrades[3].quantity} contracts @ ${mockTrades[3].price}
+                      {trades[trades.length - 1].shares.toFixed(4)} shares @ ${trades[trades.length - 1].price}
                     </span>
                   </div>
+                ) : (
+                  <p>No trades available</p>
                 )}
               </CardContent>
             </Card>
@@ -358,13 +293,13 @@ const TradingDashboard = () => {
                 <CardTitle className="text-sm font-medium">Top Opportunity</CardTitle>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {isLoading ? (
                   <Skeleton className="h-12 w-full" />
                 ) : (
                   <div className="flex flex-col">
                     <div className="flex items-center space-x-2">
                       <TrendingUp className="text-blue-500 h-5 w-5" />
-                      <span className="font-bold">{mockOpportunities[0].action}</span>
+                      <span className="font-bold">{mockOpportunities[0].action} {mockOpportunities[0].marketTicker}</span>
                     </div>
                     <span className="text-xs text-muted-foreground mt-1 line-clamp-1">
                       {mockOpportunities[0].marketTitle} (${mockOpportunities[0].yesPrice})
@@ -401,7 +336,7 @@ const TradingDashboard = () => {
               <CardDescription>Markets with favorable conditions based on your strategy</CardDescription>
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {isLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
@@ -426,14 +361,12 @@ const TradingDashboard = () => {
                           <div className="text-xs text-muted-foreground">{opp.marketTicker}</div>
                         </TableCell>
                         <TableCell>
-                          YES: ${opp.yesPrice}<br />
-                          NO: ${opp.noPrice}
+                          Current: ${opp.yesPrice}<br />
+                          Target: ${opp.noPrice}
                         </TableCell>
                         <TableCell>{opp.volume.toLocaleString()}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                            opp.action.includes("YES") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                          }`}>
+                          <span className="px-2 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-800">
                             {opp.action}
                           </span>
                         </TableCell>
@@ -467,7 +400,7 @@ const TradingDashboard = () => {
               <CardDescription>Record of executed trades</CardDescription>
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {isLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
@@ -478,31 +411,31 @@ const TradingDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
-                      <TableHead>Contract</TableHead>
+                      <TableHead>Symbol</TableHead>
                       <TableHead>Action</TableHead>
                       <TableHead>Price</TableHead>
-                      <TableHead>Quantity</TableHead>
+                      <TableHead>Shares</TableHead>
                       <TableHead>P&L</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockTrades.map((trade) => (
-                      <TableRow key={trade.id}>
+                    {trades.map((trade, index) => (
+                      <TableRow key={index}>
                         <TableCell>{trade.timestamp}</TableCell>
-                        <TableCell className="font-medium">{trade.contractTicker}</TableCell>
+                        <TableCell className="font-medium">{trade.symbol}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                            trade.action === "BUY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                            trade.action.startsWith('BUY') ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                           }`}>
                             {trade.action}
                           </span>
                         </TableCell>
                         <TableCell>${trade.price}</TableCell>
-                        <TableCell>{trade.quantity}</TableCell>
+                        <TableCell>{trade.shares.toFixed(4)}</TableCell>
                         <TableCell>
-                          {trade.profitLoss !== undefined ? (
-                            <span className={trade.profitLoss >= 0 ? "text-green-600" : "text-red-600"}>
-                              ${trade.profitLoss.toFixed(2)}
+                          {trade.pnl !== undefined ? (
+                            <span className={trade.pnl >= 0 ? "text-green-600" : "text-red-600"}>
+                              ${trade.pnl.toFixed(2)}
                             </span>
                           ) : (
                             "—"
