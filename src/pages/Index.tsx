@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +10,7 @@ import { toast } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { AreaChart, BarChart } from '@/components/ui/custom-charts';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, AlertCircle, BarChart3, Settings, RefreshCw } from "lucide-react";
-import { useTradingData } from '@/utils/tradeData';
+import { useTradingData, MarketOpportunity } from '@/utils/tradeData';
 
 const TradingDashboard = () => {
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -19,6 +20,7 @@ const TradingDashboard = () => {
   
   const {
     trades,
+    opportunities,
     isLoading,
     error,
     portfolioSummary,
@@ -75,39 +77,41 @@ const TradingDashboard = () => {
     });
   };
 
-  // For opportunities tab - we'll keep the mock data for now
-  const mockOpportunities = [
-    {
-      marketTicker: "TSLA",
-      marketTitle: "Tesla showing bullish pattern on 4h chart",
-      yesPrice: 180.25,
-      noPrice: 175.65,
-      volume: 32540,
-      openInterest: 4500,
-      action: "BUY",
-      confidence: 0.85
-    },
-    {
-      marketTicker: "NVDA",
-      marketTitle: "NVIDIA momentum growing after earnings",
-      yesPrice: 125.50,
-      noPrice: 120.75,
-      volume: 18750,
-      openInterest: 3200,
-      action: "BUY",
-      confidence: 0.72
-    },
-    {
-      marketTicker: "AMD",
-      marketTitle: "AMD showing support at key level",
-      yesPrice: 145.25,
-      noPrice: 140.50,
-      volume: 25300,
-      openInterest: 5100,
-      action: "BUY",
-      confidence: 0.78
-    }
-  ];
+  // Use opportunities from API if available, otherwise use fallback data
+  const marketOpportunities = opportunities && opportunities.length > 0 ? 
+    opportunities : 
+    [
+      {
+        marketTicker: "TSLA",
+        marketTitle: "Tesla showing bullish pattern on 4h chart",
+        yesPrice: 180.25,
+        noPrice: 175.65,
+        volume: 32540,
+        openInterest: 4500,
+        action: "BUY",
+        confidence: 0.85
+      },
+      {
+        marketTicker: "NVDA",
+        marketTitle: "NVIDIA momentum growing after earnings",
+        yesPrice: 125.50,
+        noPrice: 120.75,
+        volume: 18750,
+        openInterest: 3200,
+        action: "BUY",
+        confidence: 0.72
+      },
+      {
+        marketTicker: "AMD",
+        marketTitle: "AMD showing support at key level",
+        yesPrice: 145.25,
+        noPrice: 140.50,
+        volume: 25300,
+        openInterest: 5100,
+        action: "BUY",
+        confidence: 0.78
+      }
+    ];
 
   if (error) {
     return (
@@ -142,6 +146,10 @@ const TradingDashboard = () => {
 
   // Ensure we have valid trade data for display
   const latestTrade = trades && trades.length > 0 ? trades[trades.length - 1] : null;
+  
+  // Get top opportunity
+  const topOpportunity = marketOpportunities && marketOpportunities.length > 0 ? 
+    marketOpportunities[0] : null;
 
   return (
     <div className="container mx-auto p-4">
@@ -282,7 +290,7 @@ const TradingDashboard = () => {
                 ) : latestTrade ? (
                   <div className="flex flex-col">
                     <div className="flex items-center space-x-2">
-                      {latestTrade.action && latestTrade.action.startsWith('BUY') ? (
+                      {latestTrade.action && typeof latestTrade.action === 'string' && latestTrade.action.startsWith('BUY') ? (
                         <ArrowUpCircle className="text-green-500 h-5 w-5" />
                       ) : (
                         <ArrowDownCircle className="text-red-500 h-5 w-5" />
@@ -308,16 +316,18 @@ const TradingDashboard = () => {
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-12 w-full" />
-                ) : (
+                ) : topOpportunity ? (
                   <div className="flex flex-col">
                     <div className="flex items-center space-x-2">
                       <TrendingUp className="text-blue-500 h-5 w-5" />
-                      <span className="font-bold">{mockOpportunities[0].action} {mockOpportunities[0].marketTicker}</span>
+                      <span className="font-bold">{topOpportunity.action} {topOpportunity.marketTicker}</span>
                     </div>
                     <span className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                      {mockOpportunities[0].marketTitle} (${mockOpportunities[0].yesPrice})
+                      {topOpportunity.marketTitle} (${topOpportunity.yesPrice.toFixed(2)})
                     </span>
                   </div>
+                ) : (
+                  <p>No opportunities available</p>
                 )}
               </CardContent>
             </Card>
@@ -360,26 +370,29 @@ const TradingDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Market</TableHead>
-                      <TableHead>Price</TableHead>
+                      <TableHead>Price (YES/NO)</TableHead>
                       <TableHead>Volume</TableHead>
                       <TableHead>Action</TableHead>
                       <TableHead>Confidence</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockOpportunities.map((opp, index) => (
+                    {marketOpportunities.map((opp, index) => (
                       <TableRow key={index}>
                         <TableCell>
                           <div className="font-medium line-clamp-2">{opp.marketTitle}</div>
                           <div className="text-xs text-muted-foreground">{opp.marketTicker}</div>
                         </TableCell>
                         <TableCell>
-                          Current: ${opp.yesPrice}<br />
-                          Target: ${opp.noPrice}
+                          YES: ${opp.yesPrice.toFixed(2)}<br />
+                          NO: ${opp.noPrice.toFixed(2)}
                         </TableCell>
                         <TableCell>{opp.volume.toLocaleString()}</TableCell>
                         <TableCell>
-                          <span className="px-2 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-800">
+                          <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
+                            opp.action === 'BUY' ? "bg-green-100 text-green-800" : 
+                            "bg-yellow-100 text-yellow-800"
+                          }`}>
                             {opp.action}
                           </span>
                         </TableCell>
@@ -438,7 +451,9 @@ const TradingDashboard = () => {
                         <TableCell className="font-medium">{trade.symbol}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                            trade.action.startsWith('BUY') ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                            trade.action && typeof trade.action === 'string' && trade.action.startsWith('BUY') 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-red-100 text-red-800"
                           }`}>
                             {trade.action}
                           </span>

@@ -29,3 +29,13 @@ export interface DailyReturn {
   return: number;
 }
 
+export interface MarketOpportunity {
+  marketTicker: string;
+  marketTitle: string;
+  yesPrice: number;
+  noPrice: number;
+  volume: number;
+  openInterest: number;
+  action: string;
+  confidence: number;
+}

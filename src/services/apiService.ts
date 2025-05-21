@@ -2,6 +2,35 @@
 import { Trade } from "../types/trading";
 import { apiConfig } from "../utils/apiConfig";
 
+// New interface to match Kalshi API response structure
+interface KalshiContract {
+  ticker: string;
+  price: number;
+  volume?: number;
+  open_interest?: number;
+}
+
+interface KalshiMarket {
+  id: string;
+  ticker: string;
+  title: string;
+  contracts: KalshiContract[];
+  volume24h?: number;
+  open_interest?: number;
+}
+
+interface KalshiEvent {
+  id: string;
+  ticker: string;
+  title: string;
+  markets: KalshiMarket[];
+}
+
+interface KalshiResponse {
+  events: KalshiEvent[];
+}
+
+// Main function to fetch Kalshi data
 export async function fetchKalshiData() {
   const { baseUrl, apiKey, timeout, sampleLimit } = apiConfig.kalshiApi;
   const controller = new AbortController();
@@ -27,11 +56,18 @@ export async function fetchKalshiData() {
       throw new Error(`API returned ${response.status} ${response.statusText}`);
     }
     
-    const data = await response.json();
-    console.log('Successfully connected to Kalshi API, limiting to 5 events:', data.events?.slice(0, 5));
+    const data = await response.json() as KalshiResponse;
+    console.log('Successfully connected to Kalshi API:', data);
     
-    // Since the API response format differs from our application needs, throw an error
-    throw new Error('Using fallback data since API response format differs from our application needs');
+    // Check if we have events data
+    if (!data.events || data.events.length === 0) {
+      throw new Error('No events data found in Kalshi API response');
+    }
+    
+    console.log(`Found ${data.events.length} events with market data`);
+    
+    // Transform Kalshi data into the format our app expects
+    return transformKalshiData(data);
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
@@ -42,6 +78,93 @@ export async function fetchKalshiData() {
       throw error;
     }
   }
+}
+
+// Transform Kalshi data into our application's structure
+function transformKalshiData(data: KalshiResponse) {
+  const opportunities = [];
+  const trades = [];
+  
+  // Process each event and its markets
+  data.events.forEach(event => {
+    event.markets.forEach(market => {
+      // Only add markets with at least YES and NO contracts
+      if (market.contracts && market.contracts.length >= 2) {
+        // Find YES and NO contracts
+        const yesContract = market.contracts.find(c => c.ticker.endsWith('YES'));
+        const noContract = market.contracts.find(c => c.ticker.endsWith('NO'));
+        
+        if (yesContract && noContract) {
+          // Determine if this is a potential opportunity
+          const yesPrice = yesContract.price;
+          const noPrice = noContract.price;
+          
+          // Simple opportunity detection: any market with YES price > 0.6 is a BUY
+          // This is a placeholder - your actual strategy may be more complex
+          const isOpportunity = yesPrice > 0.6;
+          const action = isOpportunity ? "BUY" : "WAIT";
+          const confidence = isOpportunity ? yesPrice : (1 - yesPrice);
+          
+          // Calculate potential profit (simplified)
+          const potentialProfit = isOpportunity ? 
+            ((1 - yesPrice) / yesPrice) * 100 : 
+            ((1 - noPrice) / noPrice) * 100;
+          
+          // Add to opportunities
+          opportunities.push({
+            marketTicker: market.ticker,
+            marketTitle: market.title,
+            yesPrice: yesPrice, 
+            noPrice: noPrice,
+            volume: market.volume24h || yesContract.volume || 0,
+            openInterest: market.open_interest || yesContract.open_interest || 0,
+            action: action,
+            confidence: confidence
+          });
+          
+          // For demo purposes, create a historical trade for the first market
+          // In a real app, you would track actual trades made by the user
+          if (opportunities.length === 1) {
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            
+            // Mock a BUY trade from yesterday
+            trades.push({
+              timestamp: yesterday.toISOString().replace('T', ' ').substring(0, 19),
+              symbol: market.ticker,
+              action: "BUY",
+              price: yesPrice,
+              shares: 0.5,
+              pnl: 0,
+              strategy: "sentiment",
+              cashRemaining: 100 - (yesPrice * 0.5 * 100)
+            });
+            
+            // Mock a SELL trade from today with some profit
+            const profitPrice = yesPrice * 1.05; // 5% profit
+            const profit = (profitPrice - yesPrice) * 0.5 * 100;
+            
+            trades.push({
+              timestamp: now.toISOString().replace('T', ' ').substring(0, 19),
+              symbol: market.ticker,
+              action: "SELL (take_profit)",
+              price: profitPrice,
+              shares: 0.5,
+              pnl: profit,
+              strategy: "sentiment",
+              cashRemaining: (100 - (yesPrice * 0.5 * 100)) + (profitPrice * 0.5 * 100)
+            });
+          }
+        }
+      }
+    });
+  });
+  
+  return {
+    opportunities: opportunities,
+    trades: trades
+  };
 }
 
 export async function fetchCsvData(): Promise<Trade[]> {
