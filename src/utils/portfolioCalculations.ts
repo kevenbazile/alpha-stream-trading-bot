@@ -3,6 +3,17 @@ import { Trade, PortfolioSummary, PerformanceData, DailyReturn } from "../types/
 
 export function calculatePortfolioSummary(trades: Trade[]): PortfolioSummary {
   try {
+    if (!Array.isArray(trades) || trades.length === 0) {
+      return {
+        capital: 100,
+        totalPnL: 0,
+        totalTrades: 0,
+        openPositions: 0,
+        closedPositions: 0,
+        winRate: 0
+      };
+    }
+    
     // Take the last trade's cash remaining as current capital, with fallback
     const capital = trades.length > 0 ? 
       (trades[trades.length - 1].cashRemaining || 100) : 100;
@@ -14,7 +25,7 @@ export function calculatePortfolioSummary(trades: Trade[]): PortfolioSummary {
     const totalTrades = trades.length;
     
     // Calculate win rate
-    const profitableTrades = trades.filter(trade => trade.pnl > 0).length;
+    const profitableTrades = trades.filter(trade => (trade.pnl || 0) > 0).length;
     const winRate = totalTrades > 0 ? Math.round((profitableTrades / totalTrades) * 100) : 0;
     
     // Count open and closed positions
@@ -32,10 +43,10 @@ export function calculatePortfolioSummary(trades: Trade[]): PortfolioSummary {
         if (!positions[key]) {
           positions[key] = { shares: 0, symbol: key };
         }
-        positions[key].shares += trade.shares;
+        positions[key].shares += trade.shares || 0;
       } else if (trade.action.startsWith('SELL')) {
         if (positions[key]) {
-          positions[key].shares -= trade.shares;
+          positions[key].shares -= trade.shares || 0;
           if (positions[key].shares <= 0) {
             delete positions[key];
             closedPositions += 1;

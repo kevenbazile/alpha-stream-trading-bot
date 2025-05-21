@@ -45,14 +45,27 @@ export const useTradingData = () => {
             const parsedTrades = await fetchCsvData();
             
             if (parsedTrades && parsedTrades.length > 0) {
-              setTrades(parsedTrades);
+              // Ensure all trades have valid properties to prevent startsWith errors
+              const validatedTrades = parsedTrades.map(trade => ({
+                ...trade,
+                action: trade.action || 'UNKNOWN',
+                symbol: trade.symbol || 'UNKNOWN',
+                price: trade.price || 0,
+                shares: trade.shares || 0,
+                pnl: trade.pnl || 0,
+                timestamp: trade.timestamp || new Date().toISOString(),
+                strategy: trade.strategy || 'unknown',
+                cashRemaining: trade.cashRemaining || 100
+              }));
+              
+              setTrades(validatedTrades);
               
               // Calculate portfolio summary
-              const summary = calculatePortfolioSummary(parsedTrades);
+              const summary = calculatePortfolioSummary(validatedTrades);
               setPortfolioSummary(summary);
               
               // Generate performance data
-              const { performance, returns } = generatePerformanceData(parsedTrades);
+              const { performance, returns } = generatePerformanceData(validatedTrades);
               setPerformanceData(performance);
               setDailyReturns(returns);
             } else {
