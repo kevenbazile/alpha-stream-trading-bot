@@ -30,18 +30,21 @@ export const useTradingData = () => {
     const fetchTrades = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         
         // First try to fetch from Kalshi Elections API
         try {
+          console.log('Attempting to fetch data from Kalshi API...');
           await fetchKalshiData();
           // If we get here, it means the API call succeeded but we're still using fallback data
           // because the API response format differs from our application needs
-          throw new Error('Using fallback data since API response format differs from our application needs');
+          console.log('Kalshi API connected successfully but using fallback data due to format differences');
         } catch (apiError) {
-          console.log('Falling back to local CSV data due to:', apiError);
+          console.log('Falling back to local CSV data due to:', apiError.message);
           
           // Fallback to local CSV data
           try {
+            console.log('Loading fallback CSV data...');
             const parsedTrades = await fetchCsvData();
             
             if (parsedTrades && parsedTrades.length > 0) {
@@ -68,6 +71,8 @@ export const useTradingData = () => {
               const { performance, returns } = generatePerformanceData(validatedTrades);
               setPerformanceData(performance);
               setDailyReturns(returns);
+              
+              console.log('Successfully loaded and processed CSV data:', validatedTrades.length, 'trades');
             } else {
               throw new Error("CSV data was empty or invalid");
             }
@@ -83,6 +88,7 @@ export const useTradingData = () => {
         setError("Failed to load trade data. Please try again later.");
         
         // Generate mock data as absolute fallback
+        console.log('Using mock trade data as emergency fallback...');
         const mockTrades = generateMockTradeData();
         setTrades(mockTrades);
         
