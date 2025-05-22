@@ -4,6 +4,7 @@ import { Trade, PortfolioSummary, PerformanceData, DailyReturn } from '../types/
 import { fetchKalshiData, fetchCsvData } from '../services/apiService';
 import { generateMockTradeData } from './mockDataGenerator';
 import { calculatePortfolioSummary, generatePerformanceData } from './portfolioCalculations';
+import { toast } from "@/components/ui/sonner";
 
 export type { Trade, PortfolioSummary, PerformanceData, DailyReturn };
 
@@ -54,6 +55,13 @@ export const useTradingData = () => {
           if (kalshiData.opportunities && kalshiData.opportunities.length > 0) {
             console.log('Successfully loaded Kalshi market opportunities:', kalshiData.opportunities.length);
             setOpportunities(kalshiData.opportunities);
+            
+            // Show toast notification of successful data load
+            toast("Market data loaded", {
+              description: `${kalshiData.opportunities.length} trading opportunities found`,
+            });
+          } else {
+            console.warn('No opportunities found in Kalshi data response');
           }
           
           // Use trades from Kalshi data if available (these would be demo trades)
@@ -141,7 +149,6 @@ export const useTradingData = () => {
         setIsLoading(false);
       } catch (err) {
         console.error("Error fetching trade data:", err);
-        setError("Failed to load trade data. Please try again later.");
         
         // Generate mock data as absolute fallback
         console.log('Using mock trade data as emergency fallback...');
@@ -157,42 +164,49 @@ export const useTradingData = () => {
         
         // Generate mock opportunities if needed
         if (opportunities.length === 0) {
+          // Use Kalshi-like prediction market data instead of stock-like data
           const mockOpportunities = [
             {
-              marketTicker: "TSLA",
-              marketTitle: "Tesla showing bullish pattern on 4h chart",
-              yesPrice: 180.25,
-              noPrice: 175.65,
+              marketTicker: "DEM_PRES_2024",
+              marketTitle: "Will the Democratic candidate win the 2024 US Presidential Election?",
+              yesPrice: 0.65,
+              noPrice: 0.35,
               volume: 32540,
               openInterest: 4500,
-              action: "BUY",
+              action: "BUY YES",
               confidence: 0.85
             },
             {
-              marketTicker: "NVDA",
-              marketTitle: "NVIDIA momentum growing after earnings",
-              yesPrice: 125.50,
-              noPrice: 120.75,
+              marketTicker: "REP_HOUSE_2024",
+              marketTitle: "Will Republicans maintain control of the US House after 2024 elections?",
+              yesPrice: 0.58,
+              noPrice: 0.42,
               volume: 18750,
               openInterest: 3200,
-              action: "BUY",
+              action: "BUY YES",
               confidence: 0.72
             },
             {
-              marketTicker: "AMD",
-              marketTitle: "AMD showing support at key level",
-              yesPrice: 145.25,
-              noPrice: 140.50,
+              marketTicker: "CPI_JUN_5PCT",
+              marketTitle: "Will CPI inflation be above 5% in June 2024?",
+              yesPrice: 0.22,
+              noPrice: 0.78,
               volume: 25300,
               openInterest: 5100,
-              action: "BUY",
+              action: "BUY NO",
               confidence: 0.78
             }
           ];
           setOpportunities(mockOpportunities);
         }
         
+        toast("Using demo data", {
+          description: "Could not connect to Kalshi API. Using example data instead.",
+          duration: 5000
+        });
+        
         setIsLoading(false);
+        // Don't set error here so UI still shows the mock data
       }
     };
     
